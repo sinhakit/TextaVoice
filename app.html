@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <h1 style="font-family: 'Pacifico', cursive; font-size: 3rem; color: #3c0f4d; text-align: center; width: 100%;">TextaVoice</h1>
+  
+    <!-- Fonts & Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  </head>
+
+
+    
+    <body id="indexBdy">
+
+      <nav class="navbar navbar-expand-lg navbar-light" id="headerBg">
+          <div class="container">
+              <div class="d-flex justify-content-around w-100">
+                  <div>
+                      <h2 class="navbar-brand"> Welcom to TextaVoice😊</h2>
+                  </div>
+                  <div>
+
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-light text-dark" data-toggle="modal" data-target="#addAudiobookModal">
+                      Add New Text
+                    </button>
+                    <button class="btn btn-sm btn-danger text-white ml-2" onclick="logoutUser()">
+                      Logout
+                    </button>
+                  
+                    <!-- Navbar Color Picker -->
+                    <input type="color" id="navbarColorPicker" title="Navbar Color" class="ml-2" />
+                  
+                    <!-- Page Background Color Picker -->
+                    <input type="color" id="pageBgColorPicker" title="Page Background Color" class="ml-2" />
+                  </div>
+                  
+              </div>
+          </div>
+  
+          </div>
+  
+      </nav>
+  
+      <div class="container mt-3">
+          <div class="row" id="audiobooksContainer">
+              <!-- Audiobook cards will be dynamically generated here -->
+          </div>
+      </div>
+  
+      <div class="modal fade" id="addAudiobookModal" tabindex="-1" role="dialog" aria-labelledby="addAudiobookModalLabel"
+          aria-hidden="true">
+          <div class=" modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content bg-primary">
+                  <div class="modal-header">
+                      <h5 class="modal-title" id="addAudiobookModalLabel">Add New Text</h5>
+                      <button type="button" class="btn-close btn-danger close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                      </button>
+                  </div>
+                  <div class="modal-body">
+                      <form id="addAudiobookForm">
+                          <div class="form-group">
+                              <label for="title">Title</label>
+                              <input type="text" class="form-control form-control-sm" id="title" name="title" required>
+                          </div>
+                          <div class="form-group">
+                              <label for="author">Author</label>
+                              <input type="text" class="form-control form-control-sm" id="author" name="author" required>
+                          </div>
+                          <div class="form-group">
+                              <label for="audioUrl">Book Content</label>
+                              <textarea type="text" class="form-control form-control-sm" id="audioUrl" name="audioUrl"
+                                  required></textarea>
+                          </div>
+                          <button type="submit" class="btn btn-light text-dark">Submit</button>
+                      </form>
+                  </div>
+              </div>
+          </div>
+      </div>
+  
+      <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+      <script>
+          function fetchAndDisplayAudiobooks() {
+              fetch('http://localhost:5000/api/audiobooks')
+                  .then(response => response.json())
+                  .then(audiobooks => {
+                      const audiobooksContainer = document.getElementById('audiobooksContainer');
+                      audiobooksContainer.innerHTML = ''; // Clear existing content
+  
+                      audiobooks.forEach(audiobook => {
+                          const card = document.createElement('div');
+                          card.className = 'col-md-3 col-lg-3 mb-3';
+                          const sanitizedTitle = audiobook.title.replace(/'/g, '');
+                          const sanitizedContent = audiobook.audio_content.replace(/'/g, '');
+  
+                          card.innerHTML = `
+  <div class="card p-2">
+    <div class="card-body">
+      <h5 class="card-title">${audiobook.title}</h5>
+      <p class="card-text text-end">- ${audiobook.author}</p>
+     <div class="d-flex flex-column align-items-center">
+  <!-- Row 1: Start, Pause, Resume -->
+  <div class="d-flex flex-wrap justify-content-center mb-2">
+    <button class="btn btn-success px-3 py-2 rounded mx-1" title="Start" onclick="readAudiobookTitle('${sanitizedContent}', ${audiobook.id})">
+      <i class="bi bi-play-fill"></i>
+    </button>
+    <button class="btn btn-warning px-3 py-2 rounded mx-1" title="Pause" onclick="pauseReading()">
+      <i class="bi bi-pause-fill"></i>
+    </button>
+    <button class="btn btn-info px-3 py-2 rounded mx-1" title="Resume" onclick="resumeReading()">
+      <i class="bi bi-play-circle"></i>
+    </button>
+  </div>
+
+  <!-- Row 2: Stop, Delete, Content -->
+  <div class="d-flex flex-wrap justify-content-center mb-2">
+    <button class="btn btn-dark px-3 py-2 rounded mx-1" title="Stop" onclick="stopReading()">
+      <i class="bi bi-stop-fill"></i>
+    </button>
+    <button class="btn btn-danger px-3 py-2 rounded mx-1" title="Delete" onclick="deleteAudiobook(${audiobook.id})">
+      <i class="bi bi-trash-fill"></i>
+    </button>
+    <button class="btn btn-secondary px-3 py-2 rounded mx-1" title="Content" onclick="showAudioUrlPopup('${sanitizedContent}')">
+      <i class="bi bi-book"></i>
+    </button>
+  </div>
+
+  <!-- Row 3: Speed Slider -->
+  <div class="text-center mt-1 w-100">
+    <label class="text-muted">Speed:</label>
+    <input type="range" id="speedRange" min="0.5" max="2" step="0.1" value="1"
+           onchange="changeSpeed(this.value)" class="w-75" />
+  </div>
+</div>
+
+    </div>
+  </div>
+`;
+
+  
+                          audiobooksContainer.appendChild(card);
+                      });
+                  })
+                  .catch(error => console.error('Error fetching audiobooks:', error));
+          }
+  
+          // Function to show audio URL popup
+          function showAudioUrlPopup(audioUrl) {
+              // Create a Bootstrap modal dynamically
+              const modal = document.createElement('div');
+              modal.className = 'modal fade';
+              modal.innerHTML = `
+              <div class="modal-dialog modal-xl modal-dialog-centered">
+                  <div class="modal-content bg-info">
+                      <div class="modal-header bg-white">
+                          <p class="modal-title text-dark">Book Content</p>
+                          <button type="button" class="btn btn-close btn-danger" data-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                          <p>${audioUrl}</p>
+                      </div>
+                  </div>
+              </div>
+          `;
+  
+              // Append the modal to the body
+              document.body.appendChild(modal);
+  
+              // Initialize the Bootstrap modal
+              const bsModal = new bootstrap.Modal(modal);
+  
+              // Show the modal
+              bsModal.show();
+  
+              // Remove the modal from the DOM when it's hidden
+              modal.addEventListener('hidden.bs.modal', function () {
+                  document.body.removeChild(modal);
+              });
+          }
+  
+          // Read audiobook title using text-to-speech with audio controls
+          let synth = window.speechSynthesis;
+          let utterance;
+          let currentAudioContent = "";
+          let isPaused = false;
+
+function readAudiobookTitle(content, id) {
+  if (synth.speaking) {
+    synth.cancel();
+  }
+
+  currentAudioContent = content;
+  utterance = new SpeechSynthesisUtterance(currentAudioContent);
+  utterance.rate = document.getElementById("speedRange")?.value || 1;
+
+  synth.speak(utterance);
+  isPaused = false;
+}
+
+function pauseReading() {
+  if (synth.speaking && !synth.paused) {
+    synth.pause();
+    isPaused = true;
+  }
+}
+
+function resumeReading() {
+  if (synth.paused) {
+    synth.resume();
+    isPaused = false;
+  }
+}
+
+function stopReading() {
+  synth.cancel();
+  isPaused = false;
+}
+
+function changeSpeed(value) {
+  if (utterance && synth.speaking) {
+    stopReading();
+    utterance.rate = parseFloat(value);
+    synth.speak(utterance);
+  }
+}
+
+          // Delete audiobook function
+          function deleteAudiobook(audiobookId) {
+              // Send a request to the backend to delete the audiobook
+              fetch(`http://localhost:5000/api/delete_audiobook/${audiobookId}`, {
+                  method: 'DELETE',
+              })
+                  .then(response => response.json())
+                  .then(result => {
+                      // Fetch and display all audiobooks again (excluding the deleted one)
+                      fetchAndDisplayAudiobooks();
+                  })
+                  .catch(error => console.error('Error deleting audiobook:', error));
+          }
+  
+          // Add new audiobook form submission
+         document.getElementById('addAudiobookForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const audiobookData = {};
+    formData.forEach((value, key) => {
+        audiobookData[key] = value;
+    });
+
+    fetch('http://localhost:5000/api/add_audiobook', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(audiobookData),
+    })
+    .then(response => response.json())
+    .then(result => {
+        // ✅ Close the modal properly
+        const modalElement = document.getElementById('addAudiobookModal');
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modalInstance.hide();
+
+        // ✅ Dynamically create a new audiobook card
+        const newAudiobook = result;  // Assuming backend returns the new audiobook object
+
+        const audiobooksContainer = document.getElementById('audiobooksContainer');
+
+        // Create a new card element for the new audiobook
+        const card = document.createElement('div');
+        card.className = 'col-md-3 col-lg-3 mb-3';
+        const sanitizedTitle = newAudiobook.title.replace(/'/g, '');
+        const sanitizedContent = newAudiobook.audio_content.replace(/'/g, '');
+
+        card.innerHTML = `
+            <div class="card p-2">
+                <div class="card-body">
+                    <h5 class="card-title">${newAudiobook.title}</h5>
+                    <p class="card-text text-end">- ${newAudiobook.author}</p>
+                    <div class="d-flex flex-column align-items-center">
+                        <!-- Row 1: Start, Pause, Resume -->
+                        <div class="d-flex flex-wrap justify-content-center mb-2">
+                            <button class="btn btn-success px-3 py-2 rounded mx-1" title="Start" onclick="readAudiobookTitle('${sanitizedContent}', ${newAudiobook.id})">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <button class="btn btn-warning px-3 py-2 rounded mx-1" title="Pause" onclick="pauseReading()">
+                                <i class="bi bi-pause-fill"></i>
+                            </button>
+                            <button class="btn btn-info px-3 py-2 rounded mx-1" title="Resume" onclick="resumeReading()">
+                                <i class="bi bi-play-circle"></i>
+                            </button>
+                        </div>
+
+                        <!-- Row 2: Stop, Delete, Content -->
+                        <div class="d-flex flex-wrap justify-content-center mb-2">
+                            <button class="btn btn-dark px-3 py-2 rounded mx-1" title="Stop" onclick="stopReading()">
+                                <i class="bi bi-stop-fill"></i>
+                            </button>
+                            <button class="btn btn-danger px-3 py-2 rounded mx-1" title="Delete" onclick="deleteAudiobook(${newAudiobook.id})">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                            <button class="btn btn-secondary px-3 py-2 rounded mx-1" title="Content" onclick="showAudioUrlPopup('${sanitizedContent}')">
+                                <i class="bi bi-book"></i>
+                            </button>
+                        </div>
+
+                        <!-- Row 3: Speed Slider -->
+                        <div class="text-center mt-1 w-100">
+                            <label class="text-muted">Speed:</label>
+                            <input type="range" id="speedRange" min="0.5" max="2" step="0.1" value="1"
+                                   onchange="changeSpeed(this.value)" class="w-75" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Append the new card to the audiobooks container
+        audiobooksContainer.appendChild(card);
+
+        // Clear form fields
+        document.getElementById("title").value = "";
+        document.getElementById("author").value = "";
+        document.getElementById("audioUrl").value = "";
+    })
+    .catch(error => console.error('Error adding new audiobook:', error));
+});
+
+
+          // Fetch and display existing audiobooks when the page loads
+          fetchAndDisplayAudiobooks();
+
+          function logoutUser() {
+    fetch('http://127.0.0.1:5000/api/logout', {
+        method: 'POST'
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log(data.message);
+        localStorage.removeItem("username");
+        window.location.href = "login.html";  // correct if Flask renders login page
+    })
+    .catch(error => {
+        console.error("Logout failed:", error);
+    });
+}
+
+
+        </script>
+        <script>
+          // Navbar background color change
+document.getElementById('navbarColorPicker').addEventListener('input', function () {
+  const color = this.value;
+  document.getElementById('headerBg').style.backgroundColor = color;
+  localStorage.setItem('navbarColor', color);
+});
+
+// Page background color change
+document.getElementById('pageBgColorPicker').addEventListener('input', function () {
+  const color = this.value;
+  document.getElementById('indexBdy').style.backgroundColor = color;
+  localStorage.setItem('pageBgColor', color);
+});
+
+// Restore saved colors on load
+window.addEventListener('DOMContentLoaded', function () {
+  const savedNavbarColor = localStorage.getItem('navbarColor');
+  const savedPageBgColor = localStorage.getItem('pageBgColor');
+
+  if (savedNavbarColor) {
+    document.getElementById('headerBg').style.backgroundColor = savedNavbarColor;
+    document.getElementById('navbarColorPicker').value = savedNavbarColor;
+  }
+
+  if (savedPageBgColor) {
+    document.getElementById('indexBdy').style.backgroundColor = savedPageBgColor;
+    document.getElementById('pageBgColorPicker').value = savedPageBgColor;
+  }
+});
+
+
+          
+      </script>
+  
+  
+      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  
+
+    <!-- Continue all your existing app code here... -->
+    <!-- ... (audiobook cards, modals, scripts, etc.) -->
+
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Password toggle
+    document.getElementById('show-password').addEventListener('change', function () {
+      const passwordInput = document.getElementById('password');
+      passwordInput.type = this.checked ? 'text' : 'password';
+    });
+
+    // Basic login simulation
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      // TODO: Validate login via backend (this is just dummy)
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+    });
+
+
+    document.getElementById('logout-btn').addEventListener('click', function () {
+  fetch('http://localhost:5000/api/logout', {
+    method: 'POST'
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message);
+    window.location.href = "login.html"; // Go back to login page
+  });
+});
+  </script>
+
+  <!-- External JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>
