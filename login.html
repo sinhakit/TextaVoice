@@ -1,0 +1,193 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - TextaVoice</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+    }
+
+    .login-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+    }
+
+    .login-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+
+    .login-box h1 {
+      font-family: 'Pacifico', cursive;
+      text-align: center;
+      color: #3c0f4d;
+    }
+
+    .login-box h2 {
+      text-align: center;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .login-box input[type="text"],
+    .login-box input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .login-btn, .google-btn {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .login-btn {
+      background-color: #6c63ff;
+      color: white;
+      font-weight: bold;
+    }
+
+    .google-btn {
+      background-color: white;
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .separator {
+      text-align: center;
+      margin: 10px 0;
+      color: #aaa;
+    }
+
+    .options {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-box">
+      <h1>TextaVoice</h1>
+      <h2>Login</h2>
+      <!-- LOGIN FORM -->
+<form id="loginForm">
+  <label for="login-username">Username or Email</label>
+  <input type="text" id="login-username" placeholder="Enter your username or email" required />
+
+  <label for="login-password">Password</label>
+  <input type="password" id="login-password" placeholder="Enter your password" required />
+
+  <div class="options">
+    <label><input type="checkbox" id="show-password" /> Show Password</label>
+  </div>
+
+  <button type="submit" class="login-btn">Login</button>
+
+  <div class="signup">
+    Don't have an account? <a href="#" onclick="toggleForm()">Sign up</a>
+  </div>
+</form>
+
+<!-- SIGNUP FORM -->
+<form id="signupForm" style="display:none;">
+  <label for="signup-username">Username or Email</label>
+  <input type="text" id="signup-username" placeholder="Enter your username or email" required />
+
+  <label for="signup-password">Password</label>
+  <input type="password" id="signup-password" placeholder="Create a strong password" required />
+
+  <button type="submit" class="login-btn">Sign Up</button>
+
+  <div class="signup">
+    Already have an account? <a href="#" onclick="toggleForm()">Login</a>
+  </div>
+</form>
+
+    </div>
+  </div>
+
+  <script>
+    // Toggle between login and signup forms
+    function toggleForm() {
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+      loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
+      signupForm.style.display = signupForm.style.display === 'none' ? 'block' : 'none';
+    }
+  
+    // Show/hide password
+    document.getElementById('show-password').addEventListener('change', function () {
+      const passwordInput = document.getElementById('login-password');
+      passwordInput.type = this.checked ? 'text' : 'password';
+    });
+  
+    // LOGIN form submit
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+  
+      fetch('http://localhost:5000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.message === "Login successful") {
+          alert("Login successful!");
+          window.location.href = "app.html";
+        } else {
+          alert(data.error);
+        }
+      });
+    });
+  
+    // SIGNUP form submit
+    document.getElementById('signupForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const username = document.getElementById('signup-username').value;
+      const password = document.getElementById('signup-password').value;
+  
+      fetch('http://localhost:5000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.message === "User registered successfully") {
+          alert("Signup successful! Now login.");
+          toggleForm();
+        } else {
+          alert(data.error);
+        }
+      });
+    });
+  </script>
+  
+
+</body>
+</html>
